@@ -234,8 +234,8 @@ void LeftWidget::slot_getPath(QTreeWidgetItem *wItem, int count)
         emit signal_create_tab_item(3,u8"实时日志");
 
     if(strPath.contains(u8"一键换产(TBOX)"))
-        if((GDataFactory::get_factory()->get_current_usr_name() == "tbox")||
-                (GDataFactory::get_factory()->get_current_usr_name() == "admin"))
+//        if((GDataFactory::get_factory()->get_current_usr_name() == "tbox")||
+//                (GDataFactory::get_factory()->get_current_usr_name() == "admin"))
             emit signal_create_tab_item(4,u8"TBOX");
 
     if(strPath.contains(u8"中框条码绑定"))

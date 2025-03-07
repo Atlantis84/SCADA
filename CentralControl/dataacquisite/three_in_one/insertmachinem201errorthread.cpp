@@ -39,6 +39,7 @@ QString InsertMachineM201ErrorThread::traverseFolder(const QString &path,const Q
 //    return strfilenamewithpath;
     QFile file(strfilenamewithpath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QLOG_ERROR()<<strfilenamewithpath;
         QLOG_ERROR()<< "can not open the log file";
     }
 
@@ -103,7 +104,7 @@ void InsertMachineM201ErrorThread::run()
 
         //insert-machine1
         QString path = "";
-        path = "//781E6V16V3103D/2024/";
+        path = "//781E6V16V3103D/2025/";
 //        path = "//127.0.0.1/InsertMachine1Logs/";
         path.append(strMonth);
         QString line = traverseFolder(path,strMonth,QString::number(currentDate.day()));
@@ -121,7 +122,7 @@ void InsertMachineM201ErrorThread::run()
         eventloop.exec();
 
         //insert-machine2
-        path = "//781E6V16V3102D/2024/";
+        path = "//781E6V16V3102D/2025/";
 //        path = "//127.0.0.1/InsertMachine2Logs/";
         path.append(strMonth);
         line = traverseFolder(path,strMonth,QString::number(currentDate.day()));
@@ -137,7 +138,7 @@ void InsertMachineM201ErrorThread::run()
         eventloop.exec();
 
         //insert-machine3
-        path = "//10.50.130.246/2024/";
+        path = "//10.50.130.246/2025/";
 //        path = "//127.0.0.1/InsertMachine3Logs/";
         path.append(strMonth);
         line = traverseFolder(path,strMonth,QString::number(currentDate.day()));
@@ -153,7 +154,7 @@ void InsertMachineM201ErrorThread::run()
         eventloop.exec();
 
         //insert-machine4
-        path = "//10.50.130.247/2024/";
+        path = "//10.50.130.247/2025/";
 //        path = "//127.0.0.1/InsertMachine4Logs/";
         path.append(strMonth);
         line = traverseFolder(path,strMonth,QString::number(currentDate.day()));

@@ -2,7 +2,6 @@
 #include <curl.h>
 #include <QsLog.h>
 using namespace QsLogging;
-HttpBasedOnCurl* HttpBasedOnCurl::m_pInstance = nullptr;
 HttpBasedOnCurl::HttpBasedOnCurl()
 {
 }
@@ -15,6 +14,12 @@ void HttpBasedOnCurl::get(const std::string &url)
 void HttpBasedOnCurl::post(const std::string &url, const std::string &data, const int& sign)
 {
     performRequest(url, data, true,sign);
+}
+
+std::string HttpBasedOnCurl::post(const std::string &url, const std::string &data)
+{
+    std::string str = performRequest(url, data, true);
+    return str;
 }
 
 size_t HttpBasedOnCurl::WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
@@ -62,4 +67,39 @@ void HttpBasedOnCurl::performRequest(const std::string &url, const std::string &
             }
             curl_easy_cleanup(curl);
         }
+}
+
+std::string HttpBasedOnCurl::performRequest(const std::string &url, const std::string &data, bool isPost)
+{
+    std::string result;
+    CURL* curl;
+        CURLcode res;
+        std::string readBuffer;
+
+        curl = curl_easy_init();
+        if (curl) {
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+            if (isPost) {
+                curl_easy_setopt(curl, CURLOPT_POST, 1L);
+                curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
+
+                struct curl_slist* headers = nullptr;
+                headers = curl_slist_append(headers, "Content-Type: application/json");
+                curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+            }
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+
+            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+
+            res = curl_easy_perform(curl);
+            if (res != CURLE_OK) {
+                QLOG_WARN()<<"curl_easy_perform() failed: " << curl_easy_strerror(res);
+                result = curl_easy_strerror(res);
+            } else
+                    result = readBuffer;
+            curl_easy_cleanup(curl);
+        }
+        return result;
 }

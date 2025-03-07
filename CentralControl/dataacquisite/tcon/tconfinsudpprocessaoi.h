@@ -21,12 +21,17 @@ public:
     void process_warnings_data(QByteArray data);
     void start_mq_service();
     void stop_mq_service();
+    void set_pass_rate_para(const QString& passrate)
+    {
+        m_pCurrentPassRate = passrate;
+    }
 private:
     TconFinsUDPProcessAOI();
 
     static TconFinsUDPProcessAOI* m_pObj;
     int m_pTimerID;
 
+    QString m_pCurrentPassRate;
     void timerEvent(QTimerEvent *event);
     QMap<int,QString> m_pMapWarningsInfoOfDB;
     QMap<int,QString> m_pAOIDataTable;

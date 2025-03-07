@@ -29,10 +29,15 @@ private:
     TcpCommonUse* m_pTcpCommonUse;
     static WaveSolderingM201Thread* m_pInstance;
 
+    bool m_pChangeProductionSign;
+    QString m_pStationName;
+    QString m_pTestFileName;
+
 signals:
 
 public slots:
 
+    void slot_change_production(const bool changesign,const QString stationname,const QString testfilename);
 };
 
 #endif // WAVESOLDERINGM201THREAD_H

@@ -19,6 +19,7 @@ OBJECTS_DIR = .\tmp
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
+DEFINES += QT_DECL_DEPRECATED
 
 # You can also make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -67,6 +68,7 @@ SOURCES += \
     dataacquisite/three_in_one/plcbusinessm201obj.cpp \
     dataacquisite/three_in_one/plcbusinessm201thread.cpp \
     dataacquisite/three_in_one/tvtestbusinessm201obj.cpp \
+    dataacquisite/three_in_one/tvtestbusinessm201thread.cpp \
     dataacquisite/three_in_one/ui/insertmachineerrorswgt.cpp \
     dataacquisite/three_in_one/ui/onebuttonchangem201wgt.cpp \
     dataacquisite/three_in_one/ui/testdivideboardwgt.cpp \
@@ -203,6 +205,7 @@ HEADERS += \
     dataacquisite/three_in_one/plcbusinessm201obj.h \
     dataacquisite/three_in_one/plcbusinessm201thread.h \
     dataacquisite/three_in_one/tvtestbusinessm201obj.h \
+    dataacquisite/three_in_one/tvtestbusinessm201thread.h \
     dataacquisite/three_in_one/ui/insertmachineerrorswgt.h \
     dataacquisite/three_in_one/ui/onebuttonchangem201wgt.h \
     dataacquisite/three_in_one/ui/testdivideboardwgt.h \

@@ -41,7 +41,6 @@ TestDivideBoardWgt::TestDivideBoardWgt(QWidget *parent) : QWidget(parent)
         lstLineEdit[i]->setReadOnly(true);
     }
 
-
     m_pEquipStatus = new BallWidget();
     m_pLineEditOKQuantity = new QLineEdit();
     m_pLineEditOKQuantity->setStyleSheet("QLineEdit{border:1px solid rgba(0,0,0,100);font-family:Microsoft YaHei;font-size:20px;"
@@ -195,6 +194,7 @@ void TestDivideBoardWgt::check_para_state(const QList<QString> lstinfo)
             if(GDataAcquisitionFactory::get_instance()->isGreater(m_pMainRollSpeedFloor,a)||
                     GDataAcquisitionFactory::get_instance()->isLess(m_pMainRollSpeedUpper,a))
             {
+//                QLOG_ERROR()<<u8"分板机主轴转速报警";
                 QJsonObject contentJsonObject;
                 contentJsonObject.insert("SET_VALUE_UPPER",QString::number(m_pMainRollSpeedUpper));
                 contentJsonObject.insert("SET_VALUE_FLOOR",QString::number(m_pMainRollSpeedFloor));
@@ -610,7 +610,7 @@ void TestDivideBoardWgt::timerEvent(QTimerEvent *event)
 
     if(event->timerId() == m_pTimerID)
     {
-        if(m_pDivideMachineDataTable.size() < 3)
+        if(m_pDivideMachineDataTable.size() < 2)
         {
             QLOG_WARN()<<"the size of Data in MQ from business-Divide is WRONG";
             return;

@@ -24,6 +24,8 @@ ScrewMachineWgt::ScrewMachineWgt(QWidget *parent) :
     m_pMesAccessManagerSave = new QNetworkAccessManager();
     m_pTcpCommonUse = new TcpCommonUse();
 
+    m_pHttpBasedOnCurl = new HttpBasedOnCurl();
+
     QHBoxLayout* hAll = new QHBoxLayout();
 
     QVBoxLayout* vBoxLeft = new QVBoxLayout();
@@ -315,10 +317,56 @@ void ScrewMachineWgt::process_plc_data(QByteArray data)
         QLOG_ERROR()<<"the length of sn is:"<<tmpLength;
         QByteArray tmpArraySN_Lock;
         QString tmpSNtest = "123456str";
+
         if(tmpLength > 16)
         {
-            for(int i=94+tmpLength-16;i<tmpLength+94;i++)
-                tmpArraySN_Lock.append(data[i]);
+            if(tmpLength == 76)
+            {
+                QByteArray tmpTestSN;
+                QByteArray aaArray;
+                QByteArray bbArray;
+                for (int i=94;i<94+tmpLength;i++)
+                {
+                    if(i%2 == 0)
+                        aaArray.append(data[i]);
+                    else
+                        bbArray.append(data[i]);
+                }
+                for (int i=0;i<aaArray.length();i++) {
+                    tmpTestSN.append(bbArray[i]);
+                    tmpTestSN.append(aaArray[i]);
+                }
+
+                QString tmpStrSN = tmpTestSN;
+                QLOG_ERROR()<<"the full out sn is:"<<tmpStrSN;
+                QString tmpStr,str1,str2,finalStr;
+                tmpStr = tmpStrSN.mid(76-17,16);
+
+                for(int i=0;i<tmpStr.length();i++)
+                {
+                    if(i%2 == 0)
+                        str1.append(tmpStr[i]);
+                    else
+                        str2.append(tmpStr[i]);
+                }
+
+                for(int i=0;i<str1.length();i++)
+                {
+                    finalStr.append(str2[i]);
+                    finalStr.append(str1[i]);
+                }
+                tmpArraySN_Lock = finalStr.toUtf8();
+            }
+            else if(tmpLength == 20)
+            {
+                for (int i = 94 + tmpLength - 20; i < tmpLength + 94; i++)
+                    tmpArraySN_Lock.append(data[i]);
+            }
+            else {
+                for(int i=94+tmpLength-16;i<tmpLength+94;i++)
+                    tmpArraySN_Lock.append(data[i]);
+            }
+
         }
         else {
             for(int i=94;i<tmpLength+94;i++)
@@ -522,53 +570,80 @@ bool ScrewMachineWgt::get_mes_info_by_sn(const QByteArray data)
     QJsonArray   ats_value;
 
     root.insert("iType", "2");
-//    root.insert("reType", "AOI_ZD");
     root.insert("empNo","");
     root.insert("pcbCode", productsn);
     root.insert("workStationSn", GDataFactory::get_factory()->get_config_para("TBOX_SCREW_MACHINE_WORK_STATION_PCB"));
 
-    QNetworkReply* reply;
     QJsonDocument doc_data(root);
     QByteArray request_data = doc_data.toJson(QJsonDocument::Compact);
-    reply = m_pMesAccessManager->post(request, request_data);
+    std::string str = m_pHttpBasedOnCurl->post(urlDes.toStdString(),std::string(request_data.data(),request_data.size()));
 
-    QEventLoop eventloop;
-    connect(reply,SIGNAL(finished()),&eventloop,SLOT(quit()));
-    QTimer::singleShot(5000,&eventloop,&QEventLoop::quit);
-    eventloop.exec();
+    QByteArray responseByte = QByteArray::fromStdString(str);
+    QTextCodec *tc = QTextCodec::codecForName("UTF8");
+    QString tmpStr = tc->toUnicode(responseByte);
+    QLOG_ERROR()<<"the pcba Mes reply data is:"<<tmpStr;
 
-    if(reply->isFinished())
+    QJsonParseError jError;
+    QJsonDocument jsonDocument = QJsonDocument::fromJson(responseByte,&jError);
+    QLOG_ERROR()<<jError.errorString();
+    QJsonObject jsonObject = jsonDocument.object();
+
+    if(jsonObject.contains("code"))
     {
-        QByteArray responseByte = reply->readAll();
-        QTextCodec *tc = QTextCodec::codecForName("UTF8");
-        QString tmpStr = tc->toUnicode(responseByte);
-        QLOG_ERROR()<<"the pcba Mes reply data is:"<<tmpStr;
-
-        QJsonParseError jError;
-        QJsonDocument jsonDocument = QJsonDocument::fromJson(responseByte,&jError);
-        QLOG_ERROR()<<jError.errorString();
-        QJsonObject jsonObject = jsonDocument.object();
-
-        if(jsonObject.contains("code"))
-        {
-            QJsonValue instructionValue = jsonObject.value(QStringLiteral("code"));
-            QString rMes = instructionValue.toString();
-            if(rMes == "OK")
-                result = true;
-            else
-                result = false;
-        }
+        QJsonValue instructionValue = jsonObject.value(QStringLiteral("code"));
+        QString rMes = instructionValue.toString();
+        if(rMes == "OK")
+            result = true;
         else
-        {
-            QLOG_WARN()<<"the info from Mes exist ERROR!";
             result = false;
-        }
     }
     else
     {
-        QLOG_WARN()<<"http post request reply is TIMEOUT!";
+        QLOG_WARN()<<"the info from Mes exist ERROR!";
         result = false;
     }
+//    QNetworkReply* reply;
+//    QJsonDocument doc_data(root);
+//    QByteArray request_data = doc_data.toJson(QJsonDocument::Compact);
+//    reply = m_pMesAccessManager->post(request, request_data);
+
+//    QEventLoop eventloop;
+//    connect(reply,SIGNAL(finished()),&eventloop,SLOT(quit()));
+//    QTimer::singleShot(5000,&eventloop,&QEventLoop::quit);
+//    eventloop.exec();
+
+//    if(reply->isFinished())
+//    {
+//        QByteArray responseByte = reply->readAll();
+//        QTextCodec *tc = QTextCodec::codecForName("UTF8");
+//        QString tmpStr = tc->toUnicode(responseByte);
+//        QLOG_ERROR()<<"the pcba Mes reply data is:"<<tmpStr;
+
+//        QJsonParseError jError;
+//        QJsonDocument jsonDocument = QJsonDocument::fromJson(responseByte,&jError);
+//        QLOG_ERROR()<<jError.errorString();
+//        QJsonObject jsonObject = jsonDocument.object();
+
+//        if(jsonObject.contains("code"))
+//        {
+//            QJsonValue instructionValue = jsonObject.value(QStringLiteral("code"));
+//            QString rMes = instructionValue.toString();
+//            if(rMes == "OK")
+//                result = true;
+//            else
+//                result = false;
+//        }
+//        else
+//        {
+//            QLOG_WARN()<<"the info from Mes exist ERROR!";
+//            result = false;
+//        }
+//    }
+//    else
+//    {
+//        QLOG_WARN()<<"http post request reply is TIMEOUT!";
+//        result = false;
+//    }
 
     return result;
 }
@@ -648,51 +723,79 @@ bool ScrewMachineWgt::save_product_info_to_mes(const QByteArray data,const QList
     data_value.insert("botEltNumber","");
     root.insert("data",data_value);
 
-    QNetworkReply* reply;
     QJsonDocument doc_data(root);
     QByteArray request_data = doc_data.toJson(QJsonDocument::Compact);
+    std::string str = m_pHttpBasedOnCurl->post(urlDes.toStdString(),std::string(request_data.data(),request_data.size()));
+
+    QByteArray responseByte = QByteArray::fromStdString(str);
     QTextCodec *tc = QTextCodec::codecForName("UTF8");
-    QString tmpStr = tc->toUnicode(request_data);
-    QLOG_INFO()<<"the MSG send to MES is:"<<request_data;
-    reply = m_pMesAccessManagerSave->post(request, request_data);
+    QString tmpStr = tc->toUnicode(responseByte);
+    QLOG_ERROR()<<"the Mes reply SAVE data is:"<<tmpStr;
 
-    QEventLoop eventloop;
-    connect(reply,SIGNAL(finished()),&eventloop,SLOT(quit()));
-    //set get request time out
-    QTimer::singleShot(5000,&eventloop,&QEventLoop::quit);
-    eventloop.exec();
+    QJsonParseError jError;
+    QJsonDocument jsonDocument = QJsonDocument::fromJson(responseByte,&jError);
+    QJsonObject jsonObject = jsonDocument.object();
 
-    if(reply->isFinished())
+    if(jsonObject.contains("code"))
     {
-        QByteArray responseByte = reply->readAll();
-        QTextCodec *tc = QTextCodec::codecForName("UTF8");
-        QString tmpStr = tc->toUnicode(responseByte);
-        QLOG_ERROR()<<"the Mes reply SAVE data is:"<<tmpStr;
-
-        QJsonParseError jError;
-        QJsonDocument jsonDocument = QJsonDocument::fromJson(responseByte,&jError);
-        QJsonObject jsonObject = jsonDocument.object();
-
-        if(jsonObject.contains("code"))
-        {
-            QJsonValue instructionValue = jsonObject.value(QStringLiteral("code"));
-            QString rMes = instructionValue.toString();
-            if(rMes == "OK")
-                result = true;
-            else
-                result = false;
-        }
+        QJsonValue instructionValue = jsonObject.value(QStringLiteral("code"));
+        QString rMes = instructionValue.toString();
+        if(rMes == "OK")
+            result = true;
         else
-        {
-            QLOG_WARN()<<"the info from Mes exist ERROR!";
             result = false;
-        }
     }
     else
     {
-        QLOG_WARN()<<"http post request reply is TIMEOUT!";
+        QLOG_WARN()<<"the info from Mes exist ERROR!";
         result = false;
     }
+
+//    QNetworkReply* reply;
+//    QJsonDocument doc_data(root);
+//    QByteArray request_data = doc_data.toJson(QJsonDocument::Compact);
+//    QTextCodec *tc = QTextCodec::codecForName("UTF8");
+//    QString tmpStr = tc->toUnicode(request_data);
+//    QLOG_INFO()<<"the MSG send to MES is:"<<request_data;
+//    reply = m_pMesAccessManagerSave->post(request, request_data);
+
+//    QEventLoop eventloop;
+//    connect(reply,SIGNAL(finished()),&eventloop,SLOT(quit()));
+//    //set get request time out
+//    QTimer::singleShot(5000,&eventloop,&QEventLoop::quit);
+//    eventloop.exec();
+
+//    if(reply->isFinished())
+//    {
+//        QByteArray responseByte = reply->readAll();
+//        QTextCodec *tc = QTextCodec::codecForName("UTF8");
+//        QString tmpStr = tc->toUnicode(responseByte);
+//        QLOG_ERROR()<<"the Mes reply SAVE data is:"<<tmpStr;
+
+//        QJsonParseError jError;
+//        QJsonDocument jsonDocument = QJsonDocument::fromJson(responseByte,&jError);
+//        QJsonObject jsonObject = jsonDocument.object();
+
+//        if(jsonObject.contains("code"))
+//        {
+//            QJsonValue instructionValue = jsonObject.value(QStringLiteral("code"));
+//            QString rMes = instructionValue.toString();
+//            if(rMes == "OK")
+//                result = true;
+//            else
+//                result = false;
+//        }
+//        else
+//        {
+//            QLOG_WARN()<<"the info from Mes exist ERROR!";
+//            result = false;
+//        }
+//    }
+//    else
+//    {
+//        QLOG_WARN()<<"http post request reply is TIMEOUT!";
+//        result = false;
+//    }
     return result;
 }
 

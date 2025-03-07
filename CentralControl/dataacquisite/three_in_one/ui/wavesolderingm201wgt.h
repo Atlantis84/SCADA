@@ -37,6 +37,7 @@ private:
 
 signals:
     void signal_to_start_acquisition_after_confirm(const DEV_TYPE_M201 dType);
+    void signal_notify_change_production_result(const QByteArray& data);
 public slots:
     void process_info_from_tcp_server(const QByteArray& data);
     void slot_connect_state(int connectState);

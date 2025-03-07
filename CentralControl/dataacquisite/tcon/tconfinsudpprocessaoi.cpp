@@ -127,6 +127,7 @@ void TconFinsUDPProcessAOI::stop_mq_service()
 TconFinsUDPProcessAOI::TconFinsUDPProcessAOI()
 {
     qRegisterMetaType<QList<QString>>("QList<QString>");
+    m_pCurrentPassRate = "";
     load_data_from_db();
     m_pMqSerViceSrc = nullptr;
     connect(this,SIGNAL(signal_warnings(QList<QString>)),GDataFactory::get_aoi_station_wgt_tcon(),SLOT(slot_warnings(QList<QString>)));
@@ -196,7 +197,8 @@ void TconFinsUDPProcessAOI::process_ok_ng_data(QByteArray data)
                 int total = lstInfo[2].toInt() + lstInfo[5].toInt();
 
                 QString str_ok_ng_quantity="";
-                str_ok_ng_quantity.append(QString::number(total).append(',').append(QString::number(oks)).append(',').append(QString::number(ngs)));
+//                str_ok_ng_quantity.append(QString::number(total).append(',').append(QString::number(oks)).append(',').append(QString::number(ngs)));
+                str_ok_ng_quantity.append(QString::number(total).append(',').append(QString::number(oks)).append(',').append(m_pCurrentPassRate));
                 if(m_pAOIDataTable.contains(DATA_TYPE::Ok_Ng_Quantity))
                     m_pAOIDataTable[DATA_TYPE::Ok_Ng_Quantity] = str_ok_ng_quantity;
                 else

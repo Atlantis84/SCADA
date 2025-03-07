@@ -98,7 +98,7 @@ OneButtonChangeM201Wgt::OneButtonChangeM201Wgt(QWidget *parent) : QWidget(parent
     m_pCmbStationStyle = new QComboBox();
 
 //    //load product info from db
-    load_product_info_from_db();
+//    load_product_info_from_db();
 
     QStringList lstTableName;
     lstTableName.clear();
@@ -191,21 +191,22 @@ OneButtonChangeM201Wgt::OneButtonChangeM201Wgt(QWidget *parent) : QWidget(parent
     cbStation5 = new QCheckBox(u8"异型插2");
     cbStation6 = new QCheckBox(u8"异型插3");
     cbStation7 = new QCheckBox(u8"异型插4");
-    cbStation8 = new QCheckBox(u8"夹上盖");
-    cbStation9 = new QCheckBox(u8"视觉");
-    cbStation10 = new QCheckBox(u8"下夹具");
+    cbStation8 = new QCheckBox(u8"炉前CCD");
+    cbStation9 = new QCheckBox(u8"波峰焊");
+    cbStation10 = new QCheckBox(u8"取上盖");
+    cbStation11 = new QCheckBox(u8"炉后AOI");
+    cbStation12 = new QCheckBox(u8"下夹具");
 
-
-    lstCheckBox<<cbStation1<<cbStation2<<cbStation3<<cbStation4<<cbStation5<<cbStation6<<cbStation7<<cbStation8<<cbStation9<<cbStation10;
+    lstCheckBox<<cbStation1<<cbStation2<<cbStation3<<cbStation4<<cbStation5<<cbStation6<<cbStation7<<cbStation8<<cbStation9<<cbStation10<<cbStation11<<cbStation12;
     QSignalMapper* mapper = new QSignalMapper();
-    for (int i=0;i<10;i++) {
+    for (int i=0;i<12;i++) {
         lstCheckBox[i]->setStyleSheet("QCheckBox{border-color:rgba(0,0,0,0);color:rgba(0,0,0,150);font-family:KaiTi;font-size:12pt;}");
         mapper->setMapping(lstCheckBox[i],i);
         connect(lstCheckBox[i],SIGNAL(stateChanged(int)),mapper,SLOT(map()));
     }
     connect(mapper,SIGNAL(mapped(int)),this,SLOT(slot_from_mapper(int)));
 
-    hBox5->addStretch(50);
+//    hBox5->addStretch(50);
     hBox5->addWidget(cbStation1);
     hBox5->addStretch(20);
     hBox5->addWidget(cbStation2);
@@ -223,23 +224,26 @@ OneButtonChangeM201Wgt::OneButtonChangeM201Wgt(QWidget *parent) : QWidget(parent
     hBox5->addWidget(cbStation8);
     hBox5->addStretch(20);
     hBox5->addWidget(cbStation9);
-//    cbStation9->setEnabled(false);
     hBox5->addStretch(20);
     hBox5->addWidget(cbStation10);
-    hBox5->addStretch(50);
+    hBox5->addStretch(20);
+    hBox5->addWidget(cbStation11);
+    hBox5->addStretch(20);
+    hBox5->addWidget(cbStation12);
+//    hBox5->addStretch(50);
     grpStations->setLayout(hBox5);
 
     vAll->addWidget(grpStations);
     vAll->addWidget(grpBoardStyle);
     vAll->addWidget(grpInsertInfo);
     vAll->addWidget(grpScanInfo);
-    vAll->addWidget(grpChangeResult);
+//    vAll->addWidget(grpChangeResult);
     vAll->setStretch(0,1);
     vAll->setStretch(1,1);
     vAll->setStretch(2,1);
     vAll->setStretch(3,1);
     vAll->setStretch(4,5);
-    vAll->setStretch(5,1);
+//    vAll->setStretch(5,1);
     this->setLayout(vAll);
 }
 
@@ -307,6 +311,7 @@ static bool ffff = false;
 static bool gggg = false;
 void OneButtonChangeM201Wgt::slot_btn_change_production()
 {
+//    GDataAcquisitionFactory::get_aoi_business_m201_obj()->change_production_of_aoi("13633-350238");
     slot_change_production(m_pCurrentStyle,m_pCurrentMaterialNumber);
 }
 
@@ -330,7 +335,21 @@ void OneButtonChangeM201Wgt::slot_from_mapper(int id)
 
 void OneButtonChangeM201Wgt::slot_rev_tcp_server_wave_soldering_info(const QByteArray &data)
 {
+    QString tmpStr = data;
+    if(data.contains("OK"))
+    {
+        if(lstStations.contains(8))
+        {
+            lstCheckBox[8]->setCheckState(Qt::CheckState::Unchecked);
+            lstStations.removeOne(8);
+        }
+    }
 
+    if(data.contains("NG"))
+    {
+        QLOG_ERROR()<<"Wave-Soldering change production FAILED";
+    }
+    return;
 }
 
 void OneButtonChangeM201Wgt::slot_rev_serial_number(const QByteArray &data)
@@ -649,7 +668,7 @@ void OneButtonChangeM201Wgt::slot_change_production(const QString boardStyle, co
 
 
             uint16_t tt;
-            QLOG_INFO()<<u8"上夹具换产";
+            QLOG_INFO()<<u8"up-utensil change production";
             MODBUS_STATUS status;
             if(boardStyle == "13633")
                 tt = 99;
@@ -682,7 +701,7 @@ void OneButtonChangeM201Wgt::slot_change_production(const QString boardStyle, co
             break;
         case 2:
         {
-            QLOG_INFO()<<u8"点胶机换产";
+            QLOG_INFO()<<u8"glue change production";
             QString ip = DataAcquisitionConfig::get_instance()->get_config_para("THREE_IN_ONE_GLUE_IP");
             int port = DataAcquisitionConfig::get_instance()->get_config_para("THREE_IN_ONE_GLUE_PORT").toInt();
 //            if(boardStyle == "13633")
@@ -719,7 +738,6 @@ void OneButtonChangeM201Wgt::slot_change_production(const QString boardStyle, co
         case 5:
         case 6:
         {
-            QLOG_INFO()<<u8"异型插1换产";
             QString binDir = QApplication::applicationDirPath();
             binDir = binDir+"/"+"ActiveFile.txt";
 
@@ -732,8 +750,8 @@ void OneButtonChangeM201Wgt::slot_change_production(const QString boardStyle, co
             }
 
             QString strfilename = boardStyle;
-            strfilename.append("-");
-            strfilename.append(materialNumber);
+//            strfilename.append("-");
+//            strfilename.append(materialNumber);
             if(writeToFile(binDir,strfilename))
                 ;
             else {
@@ -785,6 +803,22 @@ void OneButtonChangeM201Wgt::slot_change_production(const QString boardStyle, co
             break;
         case 7:
         {
+            //front CCD
+        }
+            break;
+        case 8:
+        {
+            //wave-soldering
+            QString stationname = "Wave_Soldering";
+            QString testfilename = "";
+            testfilename.append(boardStyle);
+//            testfilename.append('_');
+//            testfilename.append(materialNumber);
+            emit signal_notify_wave_soldering_to_change_production(true,stationname,testfilename);
+        }
+            break;
+        case 9:
+        {
             ModbusClientDll* testObj = new ModbusClientDll();
             testObj->init_ip_port(MODBUS_TYPE::MODBUS_TCP,
                                   DataAcquisitionConfig::get_instance()->get_config_para("THREE_IN_ONE_PICK_UPPER_COVER_IP"),
@@ -792,7 +826,7 @@ void OneButtonChangeM201Wgt::slot_change_production(const QString boardStyle, co
 
 
             uint16_t tt;
-            QLOG_INFO()<<u8"取上盖换产";
+            QLOG_INFO()<<u8"pick-up-cover change production";
             MODBUS_STATUS status;
             if(boardStyle == "13633")
                 tt = 100;
@@ -810,8 +844,8 @@ void OneButtonChangeM201Wgt::slot_change_production(const QString boardStyle, co
             if(status == MODBUS_STATUS::RES_OK)
             {
                 QLOG_INFO()<<"the pick-up-cover change production success";
-                lstCheckBox[i]->setCheckState(Qt::CheckState::Unchecked);
-                lstStations.removeOne(lstStations[i]);
+                lstCheckBox[9]->setCheckState(Qt::CheckState::Unchecked);
+                lstStations.removeOne(9);
             }
             else
             {
@@ -819,39 +853,41 @@ void OneButtonChangeM201Wgt::slot_change_production(const QString boardStyle, co
             }
         }
             break;
-        case 8:
+        case 10:
         {
-//            QLOG_INFO()<<u8"炉后AOI换产";
-//            if(boardStyle == "13633")
-//                GDataAcquisitionFactory::get_aoi_business_m201_obj()->change_production_of_aoi("13633-350238");
-//            else
-//                GDataAcquisitionFactory::get_aoi_business_m201_obj()->change_production_of_aoi("13634.350237");
-
-            QString tmpip = "192.168.0.100";
-            quint16 tmpport = 7930;
-            if(boardStyle == "12903")
-                GDataAcquisitionFactory::get_M201_udp_business_obj()->change_production_of_vision(tmpip,tmpport,1);
-            else if(boardStyle == "13633")
-                GDataAcquisitionFactory::get_M201_udp_business_obj()->change_production_of_vision(tmpip,tmpport,2);
-            else if(boardStyle == "13634")
-                GDataAcquisitionFactory::get_M201_udp_business_obj()->change_production_of_vision(tmpip,tmpport,3);
-            else if(boardStyle == "13662")
-                GDataAcquisitionFactory::get_M201_udp_business_obj()->change_production_of_vision(tmpip,tmpport,4);
-            else if(boardStyle == "13671")
-                GDataAcquisitionFactory::get_M201_udp_business_obj()->change_production_of_vision(tmpip,tmpport,5);
-            else if(boardStyle == "51210")
-                GDataAcquisitionFactory::get_M201_udp_business_obj()->change_production_of_vision(tmpip,tmpport,6);
-            else if(boardStyle == "51283")
-                GDataAcquisitionFactory::get_M201_udp_business_obj()->change_production_of_vision(tmpip,tmpport,7);
-            else if(boardStyle == "51603")
-                GDataAcquisitionFactory::get_M201_udp_business_obj()->change_production_of_vision(tmpip,tmpport,8);
+            QLOG_INFO()<<u8"back AOI change production";
+            if(boardStyle == "13633")
+                GDataAcquisitionFactory::get_aoi_business_m201_obj()->change_production_of_aoi("78Q-1156132");
             else
-                GDataAcquisitionFactory::get_M201_udp_business_obj()->change_production_of_vision(tmpip,tmpport,1);
+                GDataAcquisitionFactory::get_aoi_business_m201_obj()->change_production_of_aoi("PI2322Y-1202524");
+
+//            GDataAcquisitionFactory::get_aoi_business_m201_obj()->change_production_of_aoi();
+
+//            QString tmpip = "192.168.0.100";
+//            quint16 tmpport = 7930;
+//            if(boardStyle == "12903")
+//                GDataAcquisitionFactory::get_M201_udp_business_obj()->change_production_of_vision(tmpip,tmpport,1);
+//            else if(boardStyle == "13633")
+//                GDataAcquisitionFactory::get_M201_udp_business_obj()->change_production_of_vision(tmpip,tmpport,2);
+//            else if(boardStyle == "13634")
+//                GDataAcquisitionFactory::get_M201_udp_business_obj()->change_production_of_vision(tmpip,tmpport,3);
+//            else if(boardStyle == "13662")
+//                GDataAcquisitionFactory::get_M201_udp_business_obj()->change_production_of_vision(tmpip,tmpport,4);
+//            else if(boardStyle == "13671")
+//                GDataAcquisitionFactory::get_M201_udp_business_obj()->change_production_of_vision(tmpip,tmpport,5);
+//            else if(boardStyle == "51210")
+//                GDataAcquisitionFactory::get_M201_udp_business_obj()->change_production_of_vision(tmpip,tmpport,6);
+//            else if(boardStyle == "51283")
+//                GDataAcquisitionFactory::get_M201_udp_business_obj()->change_production_of_vision(tmpip,tmpport,7);
+//            else if(boardStyle == "51603")
+//                GDataAcquisitionFactory::get_M201_udp_business_obj()->change_production_of_vision(tmpip,tmpport,8);
+//            else
+//                GDataAcquisitionFactory::get_M201_udp_business_obj()->change_production_of_vision(tmpip,tmpport,1);
         }
             break;
-        case 9:
+        case 11:
         {
-            QLOG_INFO()<<u8"下夹具换产";
+            QLOG_INFO()<<u8"down-utensil change production";
             ModbusClientDll* testObj = new ModbusClientDll();
             testObj->init_ip_port(MODBUS_TYPE::MODBUS_TCP,
                                   DataAcquisitionConfig::get_instance()->get_config_para("THREE_IN_ONE_DOWN_UTENSIL_IP"),
@@ -923,10 +959,10 @@ void OneButtonChangeM201Wgt::slot_rev_result_of_change_production_for_aoi(const 
     if(r==1)
     {
         QLOG_INFO()<<"the aoi change production success";
-        if(lstStations.contains(8))
+        if(lstStations.contains(10))
         {
-            lstCheckBox[8]->setCheckState(Qt::CheckState::Unchecked);
-            lstStations.removeOne(8);
+            lstCheckBox[10]->setCheckState(Qt::CheckState::Unchecked);
+            lstStations.removeOne(10);
         }
     }
     else {

@@ -228,7 +228,7 @@ void TBoxWidget::slot_rev_product_sn(const QString sn)
     this->lineEdit_SN->clear();
     this->lineEdit_SN->setText(sn);
 
-    GDataFactory::get_mes_process()->exec_http_get_tbox(sn.toLatin1());
+    GDataFactory::get_mes_process()->exec_http_get_tbox(QUrl::toPercentEncoding(sn));
 }
 
 bool TBoxWidget::remove_folder_content(const QString &folderDir)

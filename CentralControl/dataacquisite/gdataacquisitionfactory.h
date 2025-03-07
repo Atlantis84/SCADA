@@ -12,6 +12,8 @@
 #include "httpresponse.h"
 #include "httptvmsg.h"
 #include "collectinsertmachineerrorsthread.h"
+#include "httpbasedoncurl.h"
+#include "finsudpservice.h"
 class GDataAcquisitionFactory : public QObject
 {
     Q_OBJECT
@@ -103,6 +105,7 @@ public:
 
     bool isTimeBetween730And830();
     bool isTimeBetween1830And2030();
+    bool isTimeBetween1130And1230();
 
     HttpThreeInOneMsg* get_http_obj()
     {
@@ -115,6 +118,81 @@ public:
         QScopedPointer<HttpTVMsg> hMsg(new HttpTVMsg());
         hMsg->process_http_msg(httpJsonObj,response);
     }
+
+    static FinsUDPService* get_fins_upd_obj_m201_test_station(const int stationid)
+    {
+        FinsUDPService* m_pObj = nullptr;
+
+        switch (stationid) {
+        case 1:
+            if(m_pFinsUdpService01 == nullptr)
+                m_pFinsUdpService01 = new FinsUDPService();
+            m_pObj = m_pFinsUdpService01;
+            break;
+        case 2:
+            if(m_pFinsUdpService02 == nullptr)
+                m_pFinsUdpService02 = new FinsUDPService();
+            m_pObj = m_pFinsUdpService02;
+            break;
+        case 3:
+            if(m_pFinsUdpService03 == nullptr)
+                m_pFinsUdpService03 = new FinsUDPService();
+            m_pObj = m_pFinsUdpService03;
+            break;
+        case 4:
+            if(m_pFinsUdpService04 == nullptr)
+                m_pFinsUdpService04 = new FinsUDPService();
+            m_pObj = m_pFinsUdpService04;
+            break;
+        case 5:
+            if(m_pFinsUdpService05 == nullptr)
+                m_pFinsUdpService05 = new FinsUDPService();
+            m_pObj = m_pFinsUdpService05;
+            break;
+        case 6:
+            if(m_pFinsUdpService06 == nullptr)
+                m_pFinsUdpService06 = new FinsUDPService();
+            m_pObj = m_pFinsUdpService06;
+            break;
+        case 7:
+            if(m_pFinsUdpService07 == nullptr)
+                m_pFinsUdpService07 = new FinsUDPService();
+            m_pObj = m_pFinsUdpService07;
+            break;
+        case 8:
+            if(m_pFinsUdpService08 == nullptr)
+                m_pFinsUdpService08 = new FinsUDPService();
+            m_pObj = m_pFinsUdpService08;
+            break;
+        case 9:
+            if(m_pFinsUdpService09 == nullptr)
+                m_pFinsUdpService09 = new FinsUDPService();
+            m_pObj = m_pFinsUdpService09;
+            break;
+        case 10:
+            if(m_pFinsUdpService10 == nullptr)
+                m_pFinsUdpService10 = new FinsUDPService();
+            m_pObj = m_pFinsUdpService10;
+            break;
+        case 11:
+            if(m_pFinsUdpService11 == nullptr)
+                m_pFinsUdpService11 = new FinsUDPService();
+            m_pObj = m_pFinsUdpService11;
+            break;
+        case 12:
+            if(m_pFinsUdpService12 == nullptr)
+                m_pFinsUdpService12 = new FinsUDPService();
+            m_pObj = m_pFinsUdpService12;
+            break;
+        default:
+            if(m_pFinsUdpService01 == nullptr)
+                m_pFinsUdpService01 = new FinsUDPService();
+            m_pObj = m_pFinsUdpService01;
+            break;
+        }
+        return m_pObj;
+    }
+
 protected:
 
     QNetworkAccessManager* m_pAccessManagerAOIDefect;
@@ -127,12 +205,29 @@ protected:
     QString m_pPostUrlHead;
     QString m_pPostUrlEnd;
 
+    //plc-test-station
+    static FinsUDPService* m_pFinsUdpService01;
+    static FinsUDPService* m_pFinsUdpService02;
+    static FinsUDPService* m_pFinsUdpService03;
+    static FinsUDPService* m_pFinsUdpService04;
+    static FinsUDPService* m_pFinsUdpService05;
+    static FinsUDPService* m_pFinsUdpService06;
+    static FinsUDPService* m_pFinsUdpService07;
+    static FinsUDPService* m_pFinsUdpService08;
+    static FinsUDPService* m_pFinsUdpService09;
+    static FinsUDPService* m_pFinsUdpService10;
+    static FinsUDPService* m_pFinsUdpService11;
+    static FinsUDPService* m_pFinsUdpService12;
+    //plc-test-station
+
 private:
     explicit GDataAcquisitionFactory(QObject *parent = nullptr);
     void timerEvent(QTimerEvent* event);
 
     static GDataAcquisitionFactory* m_pInstance;
     static DMDBAccessInterface* m_pDMDBAccessThreeInOne;
+
+    HttpBasedOnCurl* m_pHttpBasedOnCurl;
 
     QTimer *m_pTimer;
     QTimer *m_pTimerM202;
@@ -180,6 +275,8 @@ public slots:
     void slot_rev_http_post_end_params(const std::string& data);
 
     void slot_insert_errors_to_db(QStringList lstInfo);
+
+    void slot_rev_info_from_test_station_plc(QByteArray data);
 };
 
 #endif // GDATAACQUISITIONFACTORY_H

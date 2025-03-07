@@ -314,11 +314,11 @@ void TvTestBusinessm201Obj::format_send_info(const QString strTopic, const QStri
             <<m_pTestStation7DataTable<<m_pTestStation8DataTable<<m_pTestStation9DataTable<<m_pTestStation10DataTable<<m_pTestStation11DataTable<<m_pTestStation12DataTable;
 
 
-    if(lstMap[stationID].size() != 1)
-    {
-        QLOG_WARN()<<"the size of Data in MQ from business is WRONG";
-        return;
-    }
+//    if(lstMap[stationID].size() != 1)
+//    {
+//        QLOG_WARN()<<"the size of Data in MQ from business is WRONG";
+//        return;
+//    }
 
     //when the output quantity of station is over 50,send the message
     if(m_pMapStationOutput[deviceName] < 50)
@@ -335,7 +335,8 @@ void TvTestBusinessm201Obj::format_send_info(const QString strTopic, const QStri
     QString systemstatus;
     rejectrate = lstMap[stationID][DATA_TYPE_M201::Reject_Content_M201].toJsonArray();
 
-    data.insert("SystemState","2");
+    QString stationstate = lstMap[stationID][DATA_TYPE_M201::Equipment_State_M201].toString();
+    data.insert("SystemState",stationstate);
     data.insert("ORG","4330");
     data.insert("TimeStamp",QString::number(QDateTime::currentMSecsSinceEpoch()));
     data.insert("DeviceName",deviceName);
@@ -360,6 +361,85 @@ void TvTestBusinessm201Obj::set_tv_pass_rate_para(double passrate)
     m_pPassRate = passrate;
 }
 
+void TvTestBusinessm201Obj::set_tv_station_info(int stationid, int errorcode, int stationstate)
+{
+    QLOG_ERROR()<<"the station-id received is:"<<stationid<<", station-status is:"<<stationstate;
+    switch (stationid) {
+    case 1:
+        if(m_pTestStation1DataTable.contains(DATA_TYPE_M201::Equipment_State_M201))
+            m_pTestStation1DataTable[DATA_TYPE_M201::Equipment_State_M201] = stationstate;
+        else
+            m_pTestStation1DataTable.insert(DATA_TYPE_M201::Equipment_State_M201,stationstate);
+        break;
+    case 2:
+        if(m_pTestStation2DataTable.contains(DATA_TYPE_M201::Equipment_State_M201))
+            m_pTestStation2DataTable[DATA_TYPE_M201::Equipment_State_M201] = stationstate;
+        else
+            m_pTestStation2DataTable.insert(DATA_TYPE_M201::Equipment_State_M201,stationstate);
+        break;
+    case 3:
+        if(m_pTestStation3DataTable.contains(DATA_TYPE_M201::Equipment_State_M201))
+            m_pTestStation3DataTable[DATA_TYPE_M201::Equipment_State_M201] = stationstate;
+        else
+            m_pTestStation3DataTable.insert(DATA_TYPE_M201::Equipment_State_M201,stationstate);
+        break;
+    case 4:
+        if(m_pTestStation4DataTable.contains(DATA_TYPE_M201::Equipment_State_M201))
+            m_pTestStation4DataTable[DATA_TYPE_M201::Equipment_State_M201] = stationstate;
+        else
+            m_pTestStation4DataTable.insert(DATA_TYPE_M201::Equipment_State_M201,stationstate);
+        break;
+    case 5:
+        if(m_pTestStation5DataTable.contains(DATA_TYPE_M201::Equipment_State_M201))
+            m_pTestStation5DataTable[DATA_TYPE_M201::Equipment_State_M201] = stationstate;
+        else
+            m_pTestStation5DataTable.insert(DATA_TYPE_M201::Equipment_State_M201,stationstate);
+        break;
+    case 6:
+        if(m_pTestStation6DataTable.contains(DATA_TYPE_M201::Equipment_State_M201))
+            m_pTestStation6DataTable[DATA_TYPE_M201::Equipment_State_M201] = stationstate;
+        else
+            m_pTestStation6DataTable.insert(DATA_TYPE_M201::Equipment_State_M201,stationstate);
+        break;
+    case 7:
+        if(m_pTestStation7DataTable.contains(DATA_TYPE_M201::Equipment_State_M201))
+            m_pTestStation7DataTable[DATA_TYPE_M201::Equipment_State_M201] = stationstate;
+        else
+            m_pTestStation7DataTable.insert(DATA_TYPE_M201::Equipment_State_M201,stationstate);
+        break;
+    case 8:
+        if(m_pTestStation8DataTable.contains(DATA_TYPE_M201::Equipment_State_M201))
+            m_pTestStation8DataTable[DATA_TYPE_M201::Equipment_State_M201] = stationstate;
+        else
+            m_pTestStation8DataTable.insert(DATA_TYPE_M201::Equipment_State_M201,stationstate);
+        break;
+    case 9:
+        if(m_pTestStation9DataTable.contains(DATA_TYPE_M201::Equipment_State_M201))
+            m_pTestStation9DataTable[DATA_TYPE_M201::Equipment_State_M201] = stationstate;
+        else
+            m_pTestStation9DataTable.insert(DATA_TYPE_M201::Equipment_State_M201,stationstate);
+        break;
+    case 10:
+        if(m_pTestStation10DataTable.contains(DATA_TYPE_M201::Equipment_State_M201))
+            m_pTestStation10DataTable[DATA_TYPE_M201::Equipment_State_M201] = stationstate;
+        else
+            m_pTestStation10DataTable.insert(DATA_TYPE_M201::Equipment_State_M201,stationstate);
+        break;
+    case 11:
+        if(m_pTestStation11DataTable.contains(DATA_TYPE_M201::Equipment_State_M201))
+            m_pTestStation11DataTable[DATA_TYPE_M201::Equipment_State_M201] = stationstate;
+        else
+            m_pTestStation11DataTable.insert(DATA_TYPE_M201::Equipment_State_M201,stationstate);
+        break;
+    case 12:
+        if(m_pTestStation12DataTable.contains(DATA_TYPE_M201::Equipment_State_M201))
+            m_pTestStation12DataTable[DATA_TYPE_M201::Equipment_State_M201] = stationstate;
+        else
+            m_pTestStation12DataTable.insert(DATA_TYPE_M201::Equipment_State_M201,stationstate);
+        break;
+    }
+}
+
 void TvTestBusinessm201Obj::timerEvent(QTimerEvent *event)
 {
     if(GDataAcquisitionFactory::get_instance()->isTimeBetween730And830() ||
@@ -379,15 +459,15 @@ void TvTestBusinessm201Obj::timerEvent(QTimerEvent *event)
     else if(event->timerId() == m_pTimerID6)
         format_send_info("HD_M201_TEST_STATION_6_TOPIC","M201ZDC06","HS0543302024FZSB01065",5);
     else if(event->timerId() == m_pTimerID7)
-        format_send_info("HD_M201_TEST_STATION_7_TOPIC","M201ZDC07","HS0543302024FZSB01071",6);
+        format_send_info("HD_M201_TEST_STATION_7_TOPIC","M201ZDC07","HS0543302024FZSB01066",6);
     else if(event->timerId() == m_pTimerID8)
-        format_send_info("HD_M201_TEST_STATION_8_TOPIC","M201ZDC08","HS0543302024FZSB01070",7);
+        format_send_info("HD_M201_TEST_STATION_8_TOPIC","M201ZDC08","HS0543302024FZSB01067",7);
     else if(event->timerId() == m_pTimerID9)
-        format_send_info("HD_M201_TEST_STATION_9_TOPIC","M201ZDC09","HS0543302024FZSB01069",8);
+        format_send_info("HD_M201_TEST_STATION_9_TOPIC","M201ZDC09","HS0543302024FZSB01068",8);
     else if(event->timerId() == m_pTimerID10)
-        format_send_info("HD_M201_TEST_STATION_10_TOPIC","M201ZDC10","HS0543302024FZSB01068",9);
+        format_send_info("HD_M201_TEST_STATION_10_TOPIC","M201ZDC10","HS0543302024FZSB01069",9);
     else if(event->timerId() == m_pTimerID11)
-        format_send_info("HD_M201_TEST_STATION_11_TOPIC","M201ZDC11","HS0543302024FZSB01067",10);
+        format_send_info("HD_M201_TEST_STATION_11_TOPIC","M201ZDC11","HS0543302024FZSB01070",10);
     else if(event->timerId() == m_pTimerID12)
-        format_send_info("HD_M201_TEST_STATION_12_TOPIC","M201ZDC12","HS0543302024FZSB01066",11);
+        format_send_info("HD_M201_TEST_STATION_12_TOPIC","M201ZDC12","HS0543302024FZSB01071",11);
 }

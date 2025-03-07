@@ -77,6 +77,17 @@ void HttpRequestHandler::service(HttpRequest& request, HttpResponse& response)
     {
         GDataAcquisitionFactory::get_instance()->get_http_obj()->process_http_msg(jsonObject,response);
     }
+    else if(jsonObject.contains("currentOnePassRate"))
+    {
+        QJsonValue passRateValue = jsonObject.value("currentOnePassRate");
+        TconFinsUDPProcessAOI::get_instance()->set_pass_rate_para(passRateValue.toString());
+        QJsonObject reJson;
+        reJson.insert("code","OK");
+        reJson.insert("data","");
+        QJsonDocument doc_data(reJson);
+        QByteArray response_data = doc_data.toJson(QJsonDocument::Compact);
+        response.write(response_data,true);
+    }
     else
     {
         QLOG_WARN()<<"the client request exist ERROR!";

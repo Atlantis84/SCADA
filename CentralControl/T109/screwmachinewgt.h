@@ -9,7 +9,7 @@
 #include <QNetworkAccessManager>
 #include "tcpcommonuse.h"
 #include "screwmachinereadthread.h"
-
+#include "httpbasedoncurl.h"
 class ScrewMachineWgt : public QWidget
 {
     Q_OBJECT
@@ -28,6 +28,7 @@ private:
     static ScrewMachineWgt* m_pObj;
 
     ScrewMachineReadThread smReadThread;
+    HttpBasedOnCurl* m_pHttpBasedOnCurl;
 
     QLineEdit* m_pEditScanner;
     QLineEdit* m_pEditCamera;

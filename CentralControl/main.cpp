@@ -61,8 +61,8 @@ void init_qslog()
     DestinationPtr controlDestination(DestinationFactory::MakeFunctorDestination(GDataFactory::get_logs_widget(),SLOT(slot_rev_logs(const QString))));
     logger.addDestination(controlDestination);
 
-//    DestinationPtr controlDestination1(DestinationFactory::MakeFunctorDestination(GDataFactory::get_tbox_wgt(),SLOT(slot_rev_logs(const QString))));
-//    logger.addDestination(controlDestination1);
+    DestinationPtr controlDestination1(DestinationFactory::MakeFunctorDestination(GDataFactory::get_tbox_wgt(),SLOT(slot_rev_logs(const QString))));
+    logger.addDestination(controlDestination1);
 
 //    DestinationPtr controlDestination2(DestinationFactory::MakeFunctorDestination(GDataFactory::get_one_button_change_m201_wgt(),SLOT(slot_rev_logs(const QString))));
 //    logger.addDestination(controlDestination2);
@@ -225,18 +225,13 @@ int main(int argc, char *argv[])
         }
     }
 
-//    GDataAcquisitionFactory::get_instance()->exec_http_get_method_to_get_aoi_defect();
-    //insert-machine-error
-//    InsertMachineM201ErrorThread::get_instance()->start();
-    //insert-machine-error
-
-    if(GDataFactory::get_welcome_wgt()->exec() == QDialog::Accepted )
-    {
+//    if(GDataFactory::get_welcome_wgt()->exec() == QDialog::Accepted )
+//    {
         GDataFactory::get_factory()->init_http_service();
         GDataFactory::get_main_window()->show();
         GDataFactory::get_factory()->start_data_aquisiton();//start data acquisition
-    }
-    else
-        QApplication::exit(1);
+//    }
+//    else
+//        QApplication::exit(1);
     return a.exec();
 }

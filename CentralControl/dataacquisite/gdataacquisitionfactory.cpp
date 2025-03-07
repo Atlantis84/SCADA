@@ -4,9 +4,20 @@
 #include <QSqlQuery>
 #include <QtGlobal>
 #include <QtMath>
-#include "httpbasedoncurl.h"
 GDataAcquisitionFactory* GDataAcquisitionFactory::m_pInstance = nullptr;
 DMDBAccessInterface* GDataAcquisitionFactory::m_pDMDBAccessThreeInOne = nullptr;
+FinsUDPService* GDataAcquisitionFactory::m_pFinsUdpService01 = nullptr;
+FinsUDPService* GDataAcquisitionFactory::m_pFinsUdpService02 = nullptr;
+FinsUDPService* GDataAcquisitionFactory::m_pFinsUdpService03 = nullptr;
+FinsUDPService* GDataAcquisitionFactory::m_pFinsUdpService04 = nullptr;
+FinsUDPService* GDataAcquisitionFactory::m_pFinsUdpService05 = nullptr;
+FinsUDPService* GDataAcquisitionFactory::m_pFinsUdpService06 = nullptr;
+FinsUDPService* GDataAcquisitionFactory::m_pFinsUdpService07 = nullptr;
+FinsUDPService* GDataAcquisitionFactory::m_pFinsUdpService08 = nullptr;
+FinsUDPService* GDataAcquisitionFactory::m_pFinsUdpService09 = nullptr;
+FinsUDPService* GDataAcquisitionFactory::m_pFinsUdpService10 = nullptr;
+FinsUDPService* GDataAcquisitionFactory::m_pFinsUdpService11 = nullptr;
+FinsUDPService* GDataAcquisitionFactory::m_pFinsUdpService12 = nullptr;
 
 GDataAcquisitionFactory::GDataAcquisitionFactory(QObject *parent) : QObject(parent)
 {
@@ -14,7 +25,7 @@ GDataAcquisitionFactory::GDataAcquisitionFactory(QObject *parent) : QObject(pare
     qRegisterMetaType<QVector<unsigned short>>("QVector<unsigned short>");
     m_pAccessManagerParams = new QNetworkAccessManager();
     m_pAccessManagerDefect = new QNetworkAccessManager();
-
+    m_pHttpBasedOnCurl = new HttpBasedOnCurl();
 
     m_pDataCommSerial = nullptr;
     connect_common_signals_slots();
@@ -75,9 +86,9 @@ GDataAcquisitionFactory::GDataAcquisitionFactory(QObject *parent) : QObject(pare
     get_M201_udp_business_obj()->init_udp_server(port);
     //init udp business for glue-machine&devide-machine
 
-    connect(HttpBasedOnCurl::get_instance(),SIGNAL(signal_rev_get_reply(const std::string&)),this,SLOT(slot_rev_http_get_aoi_defect(const std::string&)));
-    connect(HttpBasedOnCurl::get_instance(),SIGNAL(signal_rev_head_post_reply(const std::string&)),this,SLOT(slot_rev_http_post_head_params(const std::string&)));
-    connect(HttpBasedOnCurl::get_instance(),SIGNAL(signal_rev_end_post_reply(const std::string&)),this,SLOT(slot_rev_http_post_end_params(const std::string&)));
+    connect(m_pHttpBasedOnCurl,SIGNAL(signal_rev_get_reply(const std::string&)),this,SLOT(slot_rev_http_get_aoi_defect(const std::string&)));
+    connect(m_pHttpBasedOnCurl,SIGNAL(signal_rev_head_post_reply(const std::string&)),this,SLOT(slot_rev_http_post_head_params(const std::string&)));
+    connect(m_pHttpBasedOnCurl,SIGNAL(signal_rev_end_post_reply(const std::string&)),this,SLOT(slot_rev_http_post_end_params(const std::string&)));
 }
 
 void GDataAcquisitionFactory::timerEvent(QTimerEvent *event)
@@ -90,8 +101,9 @@ void GDataAcquisitionFactory::timerEvent(QTimerEvent *event)
 //    }
 }
 
+static int reconnecttimes = 0;
 void GDataAcquisitionFactory::slot_monitor_tcp_connect_state_M201()
-{
+{        
     if(WaveSolderingM201Thread::get_instance()->get_tcp_common_use()->get_client_state() == QAbstractSocket::SocketState::ConnectedState)
         emit signal_connect_state_M201(1);
     else
@@ -111,6 +123,10 @@ void GDataAcquisitionFactory::slot_monitor_tcp_connect_state_M201()
         else
             QLOG_WARN()<<"connect to wave soldering of M201 Failed!";
     }
+
+    reconnecttimes++;
+    if(reconnecttimes == 3)
+        m_pTimer->stop();
 }
 
 void GDataAcquisitionFactory::slot_monitor_tcp_connect_state_M202()
@@ -706,7 +722,9 @@ void GDataAcquisitionFactory::process_aoi_defect_standard_paras(QJsonArray array
         if(icon.contains("iteM_NAME") && icon.contains("loW_VALUE") && icon.contains("uP_VALUE"))
         {
             if(icon.value("iteM_NAME").toString() == u8"疵点率")
+            {
                 defectrate = icon.value("uP_VALUE").toDouble();
+            }
         }
     }
 
@@ -815,6 +833,9 @@ void GDataAcquisitionFactory::process_divide_board_standard_paras(QJsonArray arr
 
 void GDataAcquisitionFactory::start_data_acquisition_three_in_one()
 {
+    connect(OneButtonChangeM201Wgt::get_instance(),SIGNAL(signal_notify_wave_soldering_to_change_production(const bool,const QString,const QString)),WaveSolderingM201Thread::get_instance(),SLOT(slot_change_production(const bool,const QString,const QString)));
+    connect(WaveSolderingM201Wgt::get_instance(),SIGNAL(signal_notify_change_production_result(const QByteArray&)),OneButtonChangeM201Wgt::get_instance(),SLOT(slot_rev_tcp_server_wave_soldering_info(const QByteArray&)));
+
     //wave-soldering M201
     if(WaveSolderingM201Thread::get_instance()->get_tcp_common_use()->connect_to_tcp_server(DataAcquisitionConfig::get_instance()->get_config_para("THREE_IN_ONE_WAVE_SOLDERING_1_IP"),
                                                   DataAcquisitionConfig::get_instance()->get_config_para("THREE_IN_ONE_WAVE_SOLDERING_1_PORT").toInt()))
@@ -836,16 +857,16 @@ void GDataAcquisitionFactory::start_data_acquisition_three_in_one()
     //insert-machine
 
     //AOI
-//    if(AOIBusinessM201Obj::get_instance()->get_tcp_common_use()->connect_to_tcp_server(DataAcquisitionConfig::get_instance()->get_config_para("THREE_IN_ONE_AOI_IP"),
-//                                                                                       DataAcquisitionConfig::get_instance()->get_config_para("THREE_IN_ONE_AOI_PORT").toInt()))
-//    {
-//        QLOG_INFO()<<"connect to AOI SUCCESS";
-//        m_pTimerAOIM201->start(1000);
-//        AOIBusinessM201Obj::get_instance()->start_to_data_acquisite();
-//    }
-//    else
-//        QLOG_ERROR()<<"connect to AOI FAILED";
-    AOIBusinessM201Obj::get_instance()->start_to_data_acquisite();
+    if(AOIBusinessM201Obj::get_instance()->get_tcp_common_use()->connect_to_tcp_server(DataAcquisitionConfig::get_instance()->get_config_para("THREE_IN_ONE_AOI_IP"),
+                                                                                       DataAcquisitionConfig::get_instance()->get_config_para("THREE_IN_ONE_AOI_PORT").toInt()))
+    {
+        QLOG_ERROR()<<"connect to AOI SUCCESS";
+        m_pTimerAOIM201->start(1000);
+        AOIBusinessM201Obj::get_instance()->start_to_data_acquisite();
+    }
+    else
+        QLOG_ERROR()<<"connect to AOI FAILED";
+//    AOIBusinessM201Obj::get_instance()->start_to_data_acquisite();
     //AOI
 
     //first scanner
@@ -866,6 +887,20 @@ void GDataAcquisitionFactory::start_data_acquisition_three_in_one()
 
     //collect errors
     m_pTimerCollectErrors = startTimer(1000);
+
+    //20240102
+    QList<QString> tmpLst;
+    tmpLst<<"10.50.130.178"<<"10.50.130.179"<<"10.50.130.174"<<"10.50.130.175"<<"10.50.130.176"<<"10.50.130.177"
+         <<"127.0.0.1"<<"127.0.0.1"<<"10.50.130.172"<<"10.50.130.173"<<"10.50.130.170"<<"10.50.130.171";
+    //plc-test-station
+    for(int i=1;i<13;i++)
+    {
+        get_fins_upd_obj_m201_test_station(i)->init_ip_port(tmpLst[i-1],9600);
+        get_fins_upd_obj_m201_test_station(i)->moveToThread(TvTestBusinessM201Thread::get_instance());
+        connect(get_fins_upd_obj_m201_test_station(i),SIGNAL(signal_proc_real_data(QByteArray)),this,SLOT(slot_rev_info_from_test_station_plc(QByteArray)));
+    }
+
+    TvTestBusinessM201Thread::get_instance()->start();
 }
 
 void GDataAcquisitionFactory::connect_common_signals_slots()
@@ -927,7 +962,7 @@ void GDataAcquisitionFactory::exec_http_get_method_to_get_aoi_defect()
 //        QLOG_WARN()<<"aoi defect http get request reply is TIMEOUT!";;
 //    }
 
-    HttpBasedOnCurl::get_instance()->get(m_pGetUrl.toStdString());
+    m_pHttpBasedOnCurl->get(m_pGetUrl.toStdString());
 }
 
 void GDataAcquisitionFactory::exec_http_post_method_to_get_head_params(const QString sn)
@@ -946,7 +981,7 @@ void GDataAcquisitionFactory::exec_http_post_method_to_get_head_params(const QSt
     QJsonDocument doc_data(root);
     QByteArray request_data = doc_data.toJson(QJsonDocument::Compact);
 //    m_pAccessManagerHeadParams->post(request, request_data);
-    HttpBasedOnCurl::get_instance()->post(m_pPostUrlHead.toStdString(),std::string(request_data.data(),request_data.size()),1);
+    m_pHttpBasedOnCurl->post(m_pPostUrlHead.toStdString(),std::string(request_data.data(),request_data.size()),1);
 }
 
 void GDataAcquisitionFactory::exec_http_post_method_to_get_end_params(const QString sn)
@@ -966,7 +1001,7 @@ void GDataAcquisitionFactory::exec_http_post_method_to_get_end_params(const QStr
     QJsonDocument doc_data(root);
     QByteArray request_data = doc_data.toJson(QJsonDocument::Compact);
 //    m_pAccessManagerEndParams->post(request, request_data);
-    HttpBasedOnCurl::get_instance()->post(m_pPostUrlEnd.toStdString(),std::string(request_data.data(),request_data.size()),2);
+    m_pHttpBasedOnCurl->post(m_pPostUrlEnd.toStdString(),std::string(request_data.data(),request_data.size()),2);
 }
 
 bool GDataAcquisitionFactory::isGreater(double a, double b, double epsilon) {
@@ -1024,6 +1059,21 @@ void GDataAcquisitionFactory::slot_insert_errors_to_db(QStringList lstInfo)
     }
 }
 
+void GDataAcquisitionFactory::slot_rev_info_from_test_station_plc(QByteArray data)
+{
+//    QLOG_ERROR()<<data;
+    int stationid = data[3]*1;
+//    QLOG_ERROR()<<"the station id is:"<<stationid;
+    int state = data[1]*1;
+//    QLOG_ERROR()<<"the station state is:"<<state;
+    int errorcode = data[5]*1;
+//    QLOG_ERROR()<<"the station error code is:"<<errorcode;
+    if(data.size() == 6)
+    {
+        TvTestBusinessm201Obj::get_instance()->set_tv_station_info(stationid,errorcode,state);
+    }
+}
+
 bool GDataAcquisitionFactory::isTimeBetween730And830()
 {
     QTime currentTime = QTime::currentTime();
@@ -1042,6 +1092,19 @@ bool GDataAcquisitionFactory::isTimeBetween1830And2030()
     QTime currentTime = QTime::currentTime();
     QTime startTime(18, 30);
     QTime endTime(20, 30);
+
+    if (currentTime >= startTime && currentTime <= endTime) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool GDataAcquisitionFactory::isTimeBetween1130And1230()
+{
+    QTime currentTime = QTime::currentTime();
+    QTime startTime(11, 30);
+    QTime endTime(12, 30);
 
     if (currentTime >= startTime && currentTime <= endTime) {
         return true;

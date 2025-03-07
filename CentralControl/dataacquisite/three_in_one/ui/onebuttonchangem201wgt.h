@@ -57,6 +57,8 @@ private:
     QCheckBox* cbStation8;
     QCheckBox* cbStation9;
     QCheckBox* cbStation10;
+    QCheckBox* cbStation11;
+    QCheckBox* cbStation12;
 
     QList<int> lstStations;
     QList<QCheckBox*> lstCheckBox;
@@ -78,6 +80,7 @@ private:
 
 signals:
     void signal_notify_to_change_production(const QString boardStyle,const QString materialNumber);
+    void signal_notify_wave_soldering_to_change_production(const bool changesign,const QString stationname,const QString testfilename);
 public slots:
     void slot_rev_logs(const QString str);
     void slot_btn_change_production();

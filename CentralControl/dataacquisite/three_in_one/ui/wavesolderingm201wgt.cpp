@@ -91,9 +91,17 @@ void WaveSolderingM201Wgt::process_info_from_tcp_server(const QByteArray &data)
         return;
     }
 
+    QString tmpStr = data;
+    if(tmpStr.contains("stationName"))
+    {
+        emit signal_notify_change_production_result(data);
+        QLOG_ERROR()<<tmpStr;
+        return;
+    }
+
     QTextCodec *codec = QTextCodec::codecForName("GB2312");
     QString tmpData = codec->toUnicode(data);
-    QLOG_INFO()<<tmpData;
+//    QLOG_ERROR()<<tmpData;
 
     if(find_warnings(tmpData))
 //    if(1)
@@ -227,7 +235,7 @@ void WaveSolderingM201Wgt::check_para_state(const QList<double> lstinfo)
             double a = lstinfo[i];
             QLOG_WARN()<<u8"波峰马达1频率为:"<<a;
 //            if((a > m_pMotor1FrequencyFloor) && (a < m_pMotor1FrequencyUpper))
-            if(static_cast<int>(a) <= 2)
+            if((static_cast<int>(a) <= 2)||(static_cast<int>(a) >= 25))
             {
                 QJsonObject contentJsonObject;
                 contentJsonObject.insert("SET_VALUE_UPPER",QString::number(m_pMotor1FrequencyUpper));
@@ -269,7 +277,7 @@ void WaveSolderingM201Wgt::check_para_state(const QList<double> lstinfo)
             double a = lstinfo[i];
             QLOG_WARN()<<u8"波峰马达2频率为:"<<a;
 //            if((a > m_pMotor2FrequencyFloor) && (a < m_pMotor2FrequencyUpper))
-            if(static_cast<int>(a) <= 2)
+            if((static_cast<int>(a) <= 2)||(static_cast<int>(a) >= 25))
             {
                 QJsonObject contentJsonObject;
                 contentJsonObject.insert("SET_VALUE_UPPER",QString::number(m_pMotor2FrequencyUpper));
@@ -277,7 +285,7 @@ void WaveSolderingM201Wgt::check_para_state(const QList<double> lstinfo)
                 contentJsonObject.insert("ACTUAL_VALUE",QString::number(a));
                 contentJsonObject.insert("MEASURED_TYPE","HD_M201_WAVE_SOLDERING_84");
                 contentJsonObject.insert("MEASURED_TYPE_NAME",u8"波峰平流波马达频率:");
-                contentJsonObject.insert("COMPARE_RESULT","NG");
+                contentJsonObject.insert("COMPARE_RESULT","OK");
                 content.append(contentJsonObject);
             }
             else if(GDataAcquisitionFactory::get_instance()->isGreater(a,m_pMotor2FrequencyFloor) &&
@@ -306,9 +314,11 @@ void WaveSolderingM201Wgt::check_para_state(const QList<double> lstinfo)
         }
 
         //链速
+        int tmpPolderSpeed = 0;
         if(i == 2)
         {
             double a = lstinfo[i];
+            tmpPolderSpeed = static_cast<int>(a);
             QLOG_WARN()<<u8"链速为:"<<a;
 //            if((a > m_pPlolderSpeedFloor) && (a < m_pPlolderSpeedUpper))
             if(static_cast<int>(a) == 0)
@@ -331,7 +341,10 @@ void WaveSolderingM201Wgt::check_para_state(const QList<double> lstinfo)
                 contentJsonObject.insert("ACTUAL_VALUE",QString::number(a));
                 contentJsonObject.insert("MEASURED_TYPE","HD_M201_WAVE_SOLDERING_78");
                 contentJsonObject.insert("MEASURED_TYPE_NAME",u8"链速:");
-                contentJsonObject.insert("COMPARE_RESULT","NG");
+                if(tmpPolderSpeed == 0)
+                    contentJsonObject.insert("COMPARE_RESULT","OK");
+                else
+                    contentJsonObject.insert("COMPARE_RESULT","NG");
                 content.append(contentJsonObject);
             }
             else
@@ -373,7 +386,10 @@ void WaveSolderingM201Wgt::check_para_state(const QList<double> lstinfo)
                 contentJsonObject.insert("ACTUAL_VALUE",QString::number(a));
                 contentJsonObject.insert("MEASURED_TYPE","HD_M201_WAVE_SOLDERING_80");
                 contentJsonObject.insert("MEASURED_TYPE_NAME",u8"预热1温度:");
-                contentJsonObject.insert("COMPARE_RESULT","NG");
+                if(tmpPolderSpeed == 0)
+                    contentJsonObject.insert("COMPARE_RESULT","OK");
+                else
+                    contentJsonObject.insert("COMPARE_RESULT","NG");
                 content.append(contentJsonObject);
             }
             else
@@ -415,7 +431,10 @@ void WaveSolderingM201Wgt::check_para_state(const QList<double> lstinfo)
                 contentJsonObject.insert("ACTUAL_VALUE",QString::number(a));
                 contentJsonObject.insert("MEASURED_TYPE","HD_M201_WAVE_SOLDERING_81");
                 contentJsonObject.insert("MEASURED_TYPE_NAME",u8"预热2温度:");
-                contentJsonObject.insert("COMPARE_RESULT","NG");
+                if(tmpPolderSpeed == 0)
+                    contentJsonObject.insert("COMPARE_RESULT","OK");
+                else
+                    contentJsonObject.insert("COMPARE_RESULT","NG");
                 content.append(contentJsonObject);
             }
             else
@@ -457,7 +476,10 @@ void WaveSolderingM201Wgt::check_para_state(const QList<double> lstinfo)
                 contentJsonObject.insert("ACTUAL_VALUE",QString::number(a));
                 contentJsonObject.insert("MEASURED_TYPE","HD_M201_WAVE_SOLDERING_82");
                 contentJsonObject.insert("MEASURED_TYPE_NAME",u8"预热3温度:");
-                contentJsonObject.insert("COMPARE_RESULT","NG");
+                if(tmpPolderSpeed == 0)
+                    contentJsonObject.insert("COMPARE_RESULT","OK");
+                else
+                    contentJsonObject.insert("COMPARE_RESULT","NG");
                 content.append(contentJsonObject);
             }
             else
@@ -499,7 +521,10 @@ void WaveSolderingM201Wgt::check_para_state(const QList<double> lstinfo)
                 contentJsonObject.insert("ACTUAL_VALUE",QString::number(a));
                 contentJsonObject.insert("MEASURED_TYPE","HD_M201_WAVE_SOLDERING_79");
                 contentJsonObject.insert("MEASURED_TYPE_NAME",u8"炉温:");
-                contentJsonObject.insert("COMPARE_RESULT","NG");
+                if(tmpPolderSpeed == 0)
+                    contentJsonObject.insert("COMPARE_RESULT","OK");
+                else
+                    contentJsonObject.insert("COMPARE_RESULT","NG");
                 content.append(contentJsonObject);
             }
             else
@@ -769,7 +794,8 @@ void WaveSolderingM201Wgt::set_wave_soldering_params(QVector<double> vpara)
 void WaveSolderingM201Wgt::timerEvent(QTimerEvent *event)
 {
     if(GDataAcquisitionFactory::get_instance()->isTimeBetween730And830() ||
-            GDataAcquisitionFactory::get_instance()->isTimeBetween1830And2030())
+            GDataAcquisitionFactory::get_instance()->isTimeBetween1830And2030() ||
+            GDataAcquisitionFactory::get_instance()->isTimeBetween1130And1230())
         return;
     if(event->timerId() == m_pTimerID)
     {

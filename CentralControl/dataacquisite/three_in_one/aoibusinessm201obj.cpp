@@ -61,18 +61,19 @@ void AOIBusinessM201Obj::timerEvent(QTimerEvent *event)
 
         QJsonObject data;
         QJsonArray content,fault,rejectrate;
-        QString systemstatus;
+        QString systemstatus = "3";
         QJsonObject rejectJsonObject;
         QString strRejectCode = "";
+        systemstatus = m_pDefectRateDataTable[DATA_TYPE_M201::Equipment_State_M201].toString();
 
-//        m_pRealDefectRate = 180.0;
-//        m_pStandardDefectRate = 170.0;
-        QLOG_ERROR()<<"the real value is:"<<m_pRealDefectRate;
-        QLOG_ERROR()<<"the standard value is:"<<m_pStandardDefectRate;
-//        if(m_pRealDefectRate > m_pStandardDefectRate)
+//        QLOG_ERROR()<<"SystemState is:"<<systemstatus;
+        if(systemstatus == "")
+            systemstatus = "3";
+        data.insert("SystemState",systemstatus);
+
         if(GDataAcquisitionFactory::get_instance()->isEqual(m_pRealDefectRate,1000000.0))
         {
-            data.insert("SystemState","2");
+//            data.insert("SystemState","2");
             data.insert("ORG","4330");
             data.insert("TimeStamp",QString::number(QDateTime::currentMSecsSinceEpoch()));
             data.insert("DeviceName","AOI");
@@ -92,7 +93,7 @@ void AOIBusinessM201Obj::timerEvent(QTimerEvent *event)
         }
         else if(GDataAcquisitionFactory::get_instance()->isGreater(m_pRealDefectRate,m_pStandardDefectRate))
         {
-            data.insert("SystemState","2");
+//            data.insert("SystemState","2");
             data.insert("ORG","4330");
             data.insert("TimeStamp",QString::number(QDateTime::currentMSecsSinceEpoch()));
             data.insert("DeviceName","AOI");
@@ -106,8 +107,8 @@ void AOIBusinessM201Obj::timerEvent(QTimerEvent *event)
             rejectJsonObject.insert("STATION","AOI");
             QString info = QString(u8"疵点率超限报警，标准值:170，实时值:%1").arg(m_pRealDefectRate);
             info.append(u8"，报警时间为:");
-            QString tmpDefectHour = QString::number(m_pDefectHour);
-            QString tmpDefectHourPlus = QString::number(m_pDefectHour+1);
+            QString tmpDefectHour = QString::number(m_pDefectHour+1);
+            QString tmpDefectHourPlus = QString::number(m_pDefectHour+2);
             info.append(tmpDefectHour);
             info.append("-");
             info.append(tmpDefectHourPlus);
@@ -120,7 +121,7 @@ void AOIBusinessM201Obj::timerEvent(QTimerEvent *event)
         }
         else
         {
-            data.insert("SystemState","2");
+//            data.insert("SystemState","2");
             data.insert("ORG","4330");
             data.insert("TimeStamp",QString::number(QDateTime::currentMSecsSinceEpoch()));
             data.insert("DeviceName","AOI");
@@ -143,7 +144,7 @@ void AOIBusinessM201Obj::timerEvent(QTimerEvent *event)
         jsonDoc.setObject(data);
         QTextCodec *codec = QTextCodec::codecForName("utf-8");
         QString tmpData = codec->toUnicode(jsonDoc.toJson());
-        QLOG_ERROR()<<"aoi submit msg to andon:"<<tmpData;
+        QLOG_INFO()<<"aoi submit msg to andon:"<<tmpData;
         QByteArray byteArray=jsonDoc.toJson(QJsonDocument::Compact);
         m_pMqttClient->publish(QString("HD_M201_AOI_TOPIC"),byteArray);
     }
@@ -233,7 +234,7 @@ void AOIBusinessM201Obj::brokerDisconnected()
 
 void AOIBusinessM201Obj::start_to_data_acquisite()
 {
-//    m_pTimerID = startTimer(1000);
+    m_pTimerID = startTimer(1000);
     m_pAcquisiteTimerID = startTimer(5000);
     m_pClockChecker = startTimer(5000);
 }
@@ -302,8 +303,20 @@ void AOIBusinessM201Obj::change_production_of_aoi(QString recipename)
     return_node.appendChild(return_message_node);
 
     root.appendChild(return_node);
+    QLOG_ERROR()<<doc.toString();
 
     m_pTcpCommonUse->send_data_to_server(doc.toByteArray());
+}
+
+void AOIBusinessM201Obj::change_production_of_aoi()
+{
+    QJsonObject  root;
+    root.insert("lineName","C202");
+    root.insert("stationName","INSERT");
+    root.insert("testFileName","13014-1线");
+    QJsonDocument doc_data(root);
+    QByteArray request_data = doc_data.toJson(QJsonDocument::Compact);
+    m_pTcpCommonUse->send_data_to_server(request_data);
 }
 
 void AOIBusinessM201Obj::start_or_stop_equipment()
@@ -391,7 +404,7 @@ void AOIBusinessM201Obj::parse_xml_file(QString data)
        if(!message_name_node.isNull()&&message_name_node.isElement())
        {
             MessageName = message_name_node.toElement().text();
-            QLOG_ERROR()<<"MessageName is:"<<MessageName;
+//            QLOG_ERROR()<<"MessageName is:"<<MessageName;
             if(MessageName == "EAP_LinkTest_Request_R")
                 ;
             else if(MessageName == "EQP_STATUS_REPORT")
@@ -414,6 +427,7 @@ void AOIBusinessM201Obj::parse_xml_file(QString data)
 
 void AOIBusinessM201Obj::process_equipment_status(QString data)
 {
+//    QLOG_ERROR()<<u8"收到AOI状态信息";
     QDomDocument doc;
     doc.setContent(data);
     QDomElement root=doc.documentElement();
@@ -433,6 +447,17 @@ void AOIBusinessM201Obj::process_equipment_status(QString data)
                 m_pTcpCommonUse->send_data_to_server(generate_common_xml("EQP_STATUS_REPORT_R"));
                 QString eStatus = equipment_status_node.toElement().text();
                 QLOG_ERROR()<<"the equipment status of AOI is:"<<eStatus;
+                if(eStatus == "1")
+                    eStatus = "2";
+                else if(eStatus == "3")
+                    eStatus = "3";
+                else
+                    eStatus = "1";
+
+                if(m_pDefectRateDataTable.contains(DATA_TYPE_M201::Equipment_State_M201))
+                    m_pDefectRateDataTable[DATA_TYPE_M201::Equipment_State_M201] = eStatus;
+                else
+                    m_pDefectRateDataTable.insert(DATA_TYPE_M201::Equipment_State_M201,eStatus);
             }
         }
     }
@@ -485,6 +510,7 @@ void AOIBusinessM201Obj::process_pcb_report(QString data)
 static int re_send_sign = 0;
 void AOIBusinessM201Obj::process_change_production_response(QString data)
 {
+    QLOG_ERROR()<<"rev AOI Reply Info";
     QDomDocument doc;
     doc.setContent(data);
     QDomElement root=doc.documentElement();
@@ -534,6 +560,14 @@ void AOIBusinessM201Obj::process_edc_report(QString data)
     QDomNode body_node = root.firstChildElement("Body");
     if(!body_node.isNull()&&body_node.isElement())
     {
+        //if exist edc_report,the machine status is running
+        QString eStatus = "2";
+        if(m_pDefectRateDataTable.contains(DATA_TYPE_M201::Equipment_State_M201))
+            m_pDefectRateDataTable[DATA_TYPE_M201::Equipment_State_M201] = eStatus;
+        else
+            m_pDefectRateDataTable.insert(DATA_TYPE_M201::Equipment_State_M201,eStatus);
+        //if exist edc_report,the machine status is running
+
         m_pTcpCommonUse->send_data_to_server(generate_common_xml("EDC_REPORT_R"));
         QDomNode equipment_id_node = body_node.firstChildElement("EquipmentID");
     }

@@ -27,7 +27,9 @@ void TcpCommonUse::timerEvent(QTimerEvent *event)
                 QLOG_INFO()<<"re-connect to server SUCCESS!";
             }
             else
+            {
                 QLOG_WARN()<<"re-connect to server FAILED!";
+            }
         }
     }
 }
@@ -160,7 +162,7 @@ void TcpCommonUse::slot_state_changed(QAbstractSocket::SocketState state)
             disconnectByManual = false;
         else
         {
-            disconnect(m_pTcpClient,&QTcpSocket::readyRead,this,&TcpCommonUse::slot_rev_from_tcp_server);
+//            disconnect(m_pTcpClient,&QTcpSocket::readyRead,this,&TcpCommonUse::slot_rev_from_tcp_server);
 //            m_pTimerID = startTimer(5000);
         }
     }

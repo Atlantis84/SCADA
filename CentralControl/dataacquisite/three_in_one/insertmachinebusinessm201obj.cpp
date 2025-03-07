@@ -397,7 +397,10 @@ void InsertMachineBusinessM201Obj::slot_info_from_insert_machine1(QVector<unsign
                         arg(throwrate);
                 rejectJsonObject.insert("RATE_MESSAGE",ratemsg);
 
-                rejectJsonObject.insert("STATE","1");
+                if(producequantity > 100)
+                    rejectJsonObject.insert("STATE","1");
+                else
+                    rejectJsonObject.insert("STATE","0");
                 reject.append(rejectJsonObject);
             }
 
@@ -509,7 +512,10 @@ void InsertMachineBusinessM201Obj::slot_info_from_insert_machine2(QVector<unsign
             else
             {
                 QLOG_WARN()<<u8"异型插2抛料率报警";
-                rejectJsonObject.insert("STATE","1");
+                if(producequantity > 100)
+                    rejectJsonObject.insert("STATE","1");
+                else
+                    rejectJsonObject.insert("STATE","0");
                 reject.append(rejectJsonObject);
             }
 
@@ -619,7 +625,10 @@ void InsertMachineBusinessM201Obj::slot_info_from_insert_machine3(QVector<unsign
             }
             else
             {
-                rejectJsonObject.insert("STATE","1");
+                if(producequantity > 100)
+                    rejectJsonObject.insert("STATE","1");
+                else
+                    rejectJsonObject.insert("STATE","0");
                 reject.append(rejectJsonObject);
             }
 
@@ -729,7 +738,10 @@ void InsertMachineBusinessM201Obj::slot_info_from_insert_machine4(QVector<unsign
             }
             else
             {
-                rejectJsonObject.insert("STATE","1");
+                if(producequantity > 100)
+                    rejectJsonObject.insert("STATE","1");
+                else
+                    rejectJsonObject.insert("STATE","0");
                 reject.append(rejectJsonObject);
             }
 

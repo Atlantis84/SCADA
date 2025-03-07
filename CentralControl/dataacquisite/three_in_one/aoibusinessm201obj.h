@@ -26,6 +26,7 @@ public:
     void start_to_data_acquisite();
 
     void change_production_of_aoi(QString recipename);
+    void change_production_of_aoi();
     void start_or_stop_equipment();
 
     void set_real_defect_rate(double rate,int hour)

@@ -18,6 +18,8 @@ public:
 
     void set_tv_pass_rate_para(double passrate);
 
+    void set_tv_station_info(int stationid,int errorcode,int stationstate);
+
 protected:
     void timerEvent(QTimerEvent* event);
     int m_pTimerID1,m_pTimerID2,m_pTimerID3,m_pTimerID4,m_pTimerID5,m_pTimerID6,
